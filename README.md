@@ -6,6 +6,8 @@ in the display's physical pixels, glow, and light scattered in the glass. It is 
 high-density displays (5K, 4K) at an integer scale: 1280x720 → 4x on 5120x2880.
 
 - **F12** — tune the tube right over the game: sliders change the picture live, "Save" keeps the values.
+  "Magnifier" in the panel shows the screen's own pixels up close (x2 to x8): drag it with the mouse,
+  the wheel over it zooms. Handy for a screenshot of the mask and the lines (Win+Shift+S).
 - **F11** — effect on/off, handy for comparing.
 - **PrintScreen** — a screenshot of the game frame without the effect.
 - Windows display scaling above 100% is supported (tested at 200%): a custom cnc-ddraw build fixes

@@ -48,7 +48,9 @@ Manual install
      crt-emu-lite.glsl (everything except the wide glow in the glass).
 
   In the game: F12 - the shader panel over the game: sliders act live,
-                     "Save" writes the values into the shader file (keyosd in ddraw.ini),
+                     "Save" writes the values into the shader file (keyosd in ddraw.ini);
+                     "Magnifier" in the panel shows the screen's pixels up close
+                     (drag it with the mouse, the wheel over it zooms),
                F11 - shader on/off (keytoggleshader),
                PrintScreen - a frame without the shader into the Screenshots folder.
   To undo: delete ddraw.dll.

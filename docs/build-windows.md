@@ -51,8 +51,9 @@ By hand, if CI is not available: build as above into a new empty folder, `build_
   - strings in the DLL are the same (the earlier build has a different version signature `git~pccrt-dpi, pc-crt`; on Windows the ImGui paths are written with `\`);
   - sources: the commits of the `crt-emu` branch match `cnc-ddraw/patches` by `git patch-id --stable`;
   - finally, the manual in-game checklist (`docs/testing.md`).
-- Since 2026-10-29 the reference is the Windows build: it passed the in-game checklist. The one in the 2.2.0 setup is
-  `6701857C35F0…`, 1 238 016 bytes, fork `e45f03b`. The CI build of the same sources differs from it only in the timestamp
+- Since 2026-10-29 the reference is the Windows build of the commit a release is made from. For 2.3.0 it is
+  `CF32D6612B95…`, 1 244 160 bytes, fork `a7a693f`. For 2.2.0 it was `6701857C35F0…`, 1 238 016 bytes, fork `e45f03b`:
+  it passed the in-game checklist, and the CI build of those sources differed from it only in the timestamp
   (first CI run, 2026-10-30).
 
 ## Where to find things

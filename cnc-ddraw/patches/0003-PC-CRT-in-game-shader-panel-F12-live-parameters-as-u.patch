@@ -1,7 +1,7 @@
 From aafa4980aa5e37de533fc0e7782debbafff85d4f Mon Sep 17 00:00:00 2001
 From: PC-CRT build <noreply@anthropic.com>
 Date: Mon, 26 Oct 2026 13:42:50 +1300
-Subject: [PATCH 3/6] PC-CRT: in-game shader panel (F12), live parameters as
+Subject: [PATCH 3/9] PC-CRT: in-game shader panel (F12), live parameters as
  uniforms
 
 - keyosd (default F12) opens a Dear ImGui panel over the shaded frame

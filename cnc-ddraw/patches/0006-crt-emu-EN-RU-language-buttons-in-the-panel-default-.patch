@@ -1,7 +1,7 @@
 From e45f03ba185b0b76393dec04bff02d96147020f2 Mon Sep 17 00:00:00 2001
 From: priangle <203159732+priangle@users.noreply.github.com>
 Date: Fri, 30 Oct 2026 16:58:41 +1300
-Subject: [PATCH 6/6] crt-emu: EN/RU language buttons in the panel, default
+Subject: [PATCH 6/9] crt-emu: EN/RU language buttons in the panel, default
  from the game
 
 The F12 panel gets EN and RU buttons at the right end of the Save row.
