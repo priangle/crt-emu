@@ -52,7 +52,8 @@ By hand, if CI is not available: build as above into a new empty folder, `build_
   - sources: the commits of the `crt-emu` branch match `cnc-ddraw/patches` by `git patch-id --stable`;
   - finally, the manual in-game checklist (`docs/testing.md`).
 - Since 2026-10-29 the reference is the Windows build: it passed the in-game checklist. The one in the 2.2.0 setup is
-  `6701857C35F0…`, 1 238 016 bytes, fork `e45f03b`.
+  `6701857C35F0…`, 1 238 016 bytes, fork `e45f03b`. The CI build of the same sources differs from it only in the timestamp
+  (first CI run, 2026-10-30).
 
 ## Where to find things
 - The cnc-ddraw fork: `docs/cnc-ddraw-fork.md`.
