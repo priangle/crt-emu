@@ -80,7 +80,8 @@ int main(int argc, char** argv)
     { puts("FAIL panel lang dropped"); fails++; }
     if (!crtemu_panel_lang("[crt-emu]\r\nversion=2.2\r\nlang=en\r\n", v, sizeof(v)) || strcmp(v, "en") != 0 ||
         !crtemu_panel_lang("[crt-emu]\r\nlang=ru\r\n", v, sizeof(v)) || strcmp(v, "ru") != 0 ||
-        !crtemu_panel_lang("[crt-emu]\r\nversion=2.10\r\nlang=en\r\n", v, sizeof(v)) || strcmp(v, "en") != 0)
+        !crtemu_panel_lang("[crt-emu]\r\nversion=2.10\r\nlang=en\r\n", v, sizeof(v)) || strcmp(v, "en") != 0 ||
+        !crtemu_panel_lang("[crt-emu]\r\nversion=2.2.1\r\nlang=en\r\n", v, sizeof(v)) || strcmp(v, "en") != 0)
     { puts("FAIL panel lang kept"); fails++; }
     puts(fails ? "FAILED" : "ok");
     return fails != 0;

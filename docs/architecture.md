@@ -7,6 +7,8 @@ src/params    ─┤  (+presets → //@ meta) └─ out/shaderglass/*.slang(p) 
 src/presets   ─┘                                                                 │
 cnc-ddraw (fork) ── tools/build_ddraw.py → src/bin/ddraw.dll ────────────────────┤
                                  installer/build_installer.py ←──────────────────┘ → crt-emu-setup.exe
+tag vX.Y.Z → .github/workflows/release.yml: the chain above → tools/release.py pack → release
+             (crt-emu-setup-X.Y.Z.exe, crt-emu-X.Y.Z.zip, SHA256SUMS.txt)
 ```
 
 ## Shader

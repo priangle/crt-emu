@@ -15,7 +15,7 @@ high-density displays (5K, 4K) at an integer scale: 1280x720 → 4x on 5120x2880
 
 All tuning happens inside the game; there is no separate configuration tool.
 
-**Status:** pre-release, tested on one machine (see below).
+**Status:** tested on one machine (see below).
 
 ## Requirements
 - Heroes of Might and Magic III: Horn of the Abyss with the HD mod. The HD mod renderer must be
@@ -33,6 +33,10 @@ All tuning happens inside the game; there is no separate configuration tool.
    The setup is not signed, so Windows may warn about an unknown publisher:
    "More info" → "Run anyway".
 3. Start the game through HD_Launcher and press F12.
+
+Without the setup: `crt-emu-<version>.zip` from the same release holds the same files in the
+layout of the game folder; see "Manual install" in its `Shaders/crt-emu/README.txt`. It does not
+keep your tube settings and does not switch the HD mod renderer or system cursors.
 
 Run the setup again to reinstall: your tube settings and the panel language are kept
 ("Keep my tube settings when reinstalling" is on by default).
@@ -55,6 +59,7 @@ python build.py
 python tools/build_ddraw.py third_party/cnc-ddraw src/bin/ddraw.dll
 python installer/build_installer.py
 ```
+Releases are built the same way by GitHub Actions from a version tag (`docs/build-windows.md`, "Releases").
 
 ## How it works
 The shader model lives in `src/core.glsl`, one source for every build. `build.py` makes the

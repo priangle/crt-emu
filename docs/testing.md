@@ -15,6 +15,7 @@
 - Negative check: `set:NAME=value` at the end of the `modes` command changes the parameter only in the uniform variants, and the comparison must fail (exit code 1).
 - On Windows the game's graphics card does the rendering (the `GL:` line in the output): the compat context is created as in the game, with a plain `wglCreateContext`, the core one as in cnc-ddraw with `opengl_core`. Do not compare frames from the NVIDIA driver and from llvmpipe pixel by pixel: the drivers differ.
 - Calibration against photos: `python test/calibrate.py` renders with the two-pass cnc-ddraw build through `glrun.py ddraw` (Windows or Linux/WSL, numpy and pillow).
+- GitHub Actions (`.github/workflows/release.yml`, every push to `main` and every tag) runs the version check (`tools/release.py check`), the built-in checks of `test_logic` (on the built `.pass1` as both the new and the old file) and `osd_meta_test.py`. `glrun.py` does not run there: the runner has no graphics card.
 
 ## Manual in-game checklist (after DLL or shader changes)
 1. Close the game and HD_Launcher → copy the build into the game folder (run the setup and press "Reinstall") → verify the checksums.

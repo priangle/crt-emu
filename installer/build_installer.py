@@ -14,7 +14,7 @@ ROOT = os.path.dirname(HERE)
 # CRTEMU_MINGW_INCLUDE: extra include dir for windres if it cannot find <windows.h> by itself.
 BIN = os.environ.get("CRTEMU_MINGW_BIN", "")
 INC = os.environ.get("CRTEMU_MINGW_INCLUDE", "")
-VERSION = "2.2"
+VERSION = "2.2.1"  # also in setup.rc and app.manifest: tools/release.py check
 
 # (source, path inside the game folder, kind)
 PAYLOAD = [
@@ -52,7 +52,7 @@ def make_icon(path):
 def main():
     args = sys.argv[1:]
     dll = args[args.index("--dll") + 1] if "--dll" in args else None
-    out = args[args.index("--out") + 1] if "--out" in args else os.path.join(HERE, "crt-emu-setup.exe")
+    out = os.path.abspath(args[args.index("--out") + 1]) if "--out" in args else os.path.join(HERE, "crt-emu-setup.exe")
     os.makedirs(os.path.join(HERE, "build"), exist_ok=True)
 
     rc_lines, items = [], []

@@ -1,0 +1,102 @@
+# Builds ddraw.dll, the shaders and the setup on every push to main (files in the run's artifact);
+# a tag vX.Y.Z also publishes them as a GitHub release. Steps: docs/build-windows.md, "Releases".
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # The same toolchain as the reference ddraw.dll was built with (the one tested in the game), so
+  # that the DLL from here can be compared with it byte for byte, apart from the PE timestamp.
+  LLVM_MINGW: llvm-mingw-20261020-ucrt-x86_64
+  LLVM_MINGW_URL: https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip
+  LLVM_MINGW_SHA256: fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # The reference DLL is built from a CRLF working copy of the cnc-ddraw fork (the Git for Windows
+      # default). This repository is LF either way (.gitattributes).
+      - name: Line endings as on a Windows machine
+        run: git config --global core.autocrlf true
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: '3.12'
+
+      - name: Python packages
+        run: python -m pip install pillow==13.0.0
+
+      - name: llvm-mingw
+        run: |
+          tmp=$(cygpath -u "$RUNNER_TEMP")
+          zip="$tmp/$LLVM_MINGW.zip"
+          curl -fsSL -o "$zip" "$LLVM_MINGW_URL"
+          got=$(sha256sum < "$zip" | cut -d' ' -f1)
+          [ "$got" = "$LLVM_MINGW_SHA256" ] || { echo "llvm-mingw SHA-256 $got, expected $LLVM_MINGW_SHA256"; exit 1; }
+          python -m zipfile -e "$zip" "$tmp"
+          cygpath -w "$tmp/$LLVM_MINGW/bin" >> "$GITHUB_PATH"
+
+      - name: Version
+        run: |
+          i686-w64-mingw32-clang --version
+          if [ "$GITHUB_REF_TYPE" = tag ]; then tag="$GITHUB_REF_NAME"; else tag="v$(python tools/release.py version | tr -d '\r')"; fi
+          python tools/release.py check "$tag"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "NAME=${tag#v}" >> "$GITHUB_ENV"
+
+      - name: Shaders
+        run: python build.py
+
+      - name: ddraw.dll
+        run: python tools/build_ddraw.py third_party/cnc-ddraw src/bin/ddraw.dll
+
+      # The checks built into test_logic (the settings carry-over itself is checked by hand: its header)
+      - name: Test setup logic
+        run: |
+          t="$(cygpath -u "$RUNNER_TEMP")/test_logic"
+          mkdir -p "$t"
+          : > "$t/hd.ini"
+          i686-w64-mingw32-clang -O2 -Wall -Wextra -I installer installer/logic.c installer/test_logic.c -o "$t/test_logic.exe"
+          p=out/cnc-ddraw/Shaders/crt-emu/crt-emu-pass1scale.glsl.pass1
+          "$t/test_logic.exe" "$p" "$p" "$t/merged.out" "$t/hd.ini" "$t/hd.out"
+
+      - name: Test F12 panel language
+        run: python test/osd_meta_test.py "$RUNNER_TEMP/osd"
+
+      - name: Setup
+        run: |
+          mkdir -p dist
+          python installer/build_installer.py --out "dist/crt-emu-setup-$NAME.exe"
+
+      - name: Zip and checksums
+        run: python tools/release.py pack "$TAG" dist "$RUNNER_TEMP/notes.md"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: crt-emu-${{ env.NAME }}
+          path: dist/
+
+      - name: Release
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flag=--latest
+          case "$TAG" in *-*) flag=--prerelease ;; esac
+          gh release create "$TAG" dist/* --verify-tag --title "crt-emu $NAME" --notes-file "$RUNNER_TEMP/notes.md" $flag

@@ -46,7 +46,9 @@ def git_header(src):
         except OSError:
             return ""
     commit = git("describe", "--match=NeVeRmAtCh", "--always", "--dirty") or "unknown"
-    branch = git("rev-parse", "--abbrev-ref", "HEAD") or "crt-emu"
+    branch = git("rev-parse", "--abbrev-ref", "HEAD")
+    if branch in ("", "HEAD"):  # a submodule checkout (CI) has no branch: same DLL as a local build
+        branch = "crt-emu"
     with open(os.path.join(src, "inc", "git.h"), "w", newline="\n") as f:
         f.write(f'#define GIT_COMMIT "{commit}"\n#define GIT_BRANCH "{branch}"\n')
 
