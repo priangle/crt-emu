@@ -1,0 +1,14 @@
+#define IDI_APP         1
+#define IDD_MAIN        100
+#define IDC_INFO        1001
+#define IDC_PATH        1002
+#define IDC_BROWSE      1003
+#define IDC_STATUS      1004
+#define IDC_CHK_HD      1005
+#define IDC_CHK_KEEP    1006
+#define IDC_INSTALL     1007
+#define IDC_UNINSTALL   1008
+#define IDC_HINT        1009
+#define IDC_PATHLABEL   1010
+#define IDC_LANGLABEL   1011
+#define IDC_LANG        1012

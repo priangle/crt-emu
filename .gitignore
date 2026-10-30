@@ -1,0 +1,20 @@
+# --- generated ---
+out/
+installer/build/
+installer/*.exe
+**/obj-crtemu/
+__pycache__/
+*.pyc
+
+# --- binaries and builds (release assets, not source) ---
+dist/
+src/bin/ddraw.dll
+
+# --- local only: third-party photos and game graphics ---
+refs/
+src/shots/
+
+# --- private working notes: a separate private repository, checked out into .claude/ ---
+CLAUDE.md
+CLAUDE.local.md
+.claude/

@@ -1,0 +1,4 @@
+[submodule "third_party/cnc-ddraw"]
+	path = third_party/cnc-ddraw
+	url = https://github.com/priangle/cnc-ddraw
+	branch = crt-emu

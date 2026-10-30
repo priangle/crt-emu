@@ -1,0 +1,58 @@
+#pragma code_page(65001)
+#include <windows.h>
+#include "resource.h"
+
+1 24 "app.manifest"
+IDI_APP ICON "crt-emu.ico"
+
+// English template; setup.c sets every text in the chosen language (Language / Язык)
+IDD_MAIN DIALOGEX 0, 0, 340, 240
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+CAPTION "crt-emu setup"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    LTEXT           "Language / Язык:", IDC_LANGLABEL, 12, 12, 64, 10
+    COMBOBOX        IDC_LANG, 78, 10, 90, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "crt-emu turns the picture of Heroes of Might and Magic III with the HD mod into the image of a CRT tube. The setup puts into the game folder a cnc-ddraw build with a settings panel over the game (F12) and the tube shader.", IDC_INFO, 12, 28, 316, 28
+    LTEXT           "Game folder:", IDC_PATHLABEL, 12, 62, 316, 10
+    COMBOBOX        IDC_PATH, 12, 74, 254, 140, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Browse...", IDC_BROWSE, 272, 73, 56, 15
+    LTEXT           "", IDC_STATUS, 12, 96, 316, 32
+    AUTOCHECKBOX    "Set up the HD mod: renderer “16-bit DirectDraw (original)”, system cursors off", IDC_CHK_HD, 12, 132, 316, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    AUTOCHECKBOX    "Keep my tube settings when reinstalling", IDC_CHK_KEEP, 12, 154, 316, 12, WS_TABSTOP
+    LTEXT           "In the game: F12 — tune the tube right over the game, F11 — effect on/off. After an HD mod update run this setup again. Close the game and HD_Launcher before installing.", IDC_HINT, 12, 174, 316, 30
+    DEFPUSHBUTTON   "Install", IDC_INSTALL, 12, 214, 96, 16, WS_TABSTOP
+    PUSHBUTTON      "Uninstall", IDC_UNINSTALL, 114, 214, 70, 16, WS_TABSTOP
+    PUSHBUTTON      "Close", IDCANCEL, 258, 214, 70, 16, WS_TABSTOP
+END
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     2,1,0,0
+PRODUCTVERSION  2,1,0,0
+FILEFLAGSMASK   0x3fL
+FILEFLAGS       0x0L
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "crt-emu"
+            VALUE "FileDescription", "crt-emu setup: a CRT tube for HoMM3 HD"
+            VALUE "FileVersion", "2.1.0.0"
+            VALUE "InternalName", "crt-emu-setup"
+            VALUE "LegalCopyright", "crt-emu; cnc-ddraw © FunkyFr3sh (MIT); Dear ImGui © Omar Cornut (MIT)"
+            VALUE "OriginalFilename", "crt-emu-setup.exe"
+            VALUE "ProductName", "crt-emu"
+            VALUE "ProductVersion", "2.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#include "payload.rc"

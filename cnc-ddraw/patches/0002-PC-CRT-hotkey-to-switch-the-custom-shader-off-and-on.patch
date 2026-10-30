@@ -1,0 +1,178 @@
+From 3a4080b4d7124845a2fbb54d35b527c3f61588dd Mon Sep 17 00:00:00 2001
+From: PC-CRT build <noreply@anthropic.com>
+Date: Mon, 26 Oct 2026 10:13:45 +1300
+Subject: [PATCH 2/5] PC-CRT: hotkey to switch the custom shader off and on
+ (keytoggleshader, default F11)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_015iNvQWbpUqvH4LBuQbm3ET
+---
+ inc/config.h       |  1 +
+ inc/opengl_utils.h |  1 +
+ inc/render_ogl.h   |  3 +++
+ src/config.c       |  1 +
+ src/keyboard.c     |  9 +++++++++
+ src/opengl_utils.c |  2 ++
+ src/render_ogl.c   | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 7 files changed, 58 insertions(+), 1 deletion(-)
+
+diff --git a/inc/config.h b/inc/config.h
+index d6f541a..f5cf538 100644
+--- a/inc/config.h
++++ b/inc/config.h
+@@ -94,6 +94,7 @@ typedef struct CNCDDRAWCONFIG
+         int unlock_cursor1;
+         int unlock_cursor2;
+         int screenshot;
++        int toggle_shader;
+     } hotkeys;
+ 
+     /* Game specific settings */
+diff --git a/inc/opengl_utils.h b/inc/opengl_utils.h
+index d84dd20..ef78e40 100644
+--- a/inc/opengl_utils.h
++++ b/inc/opengl_utils.h
+@@ -103,6 +103,7 @@ extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
+ extern PFNGLACTIVETEXTUREPROC glActiveTexture;
+ extern PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+ extern PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
++extern PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
+ extern PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+ extern PFNGLDRAWBUFFERSPROC glDrawBuffers;
+ extern PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
+diff --git a/inc/render_ogl.h b/inc/render_ogl.h
+index bc4d39f..5547227 100644
+--- a/inc/render_ogl.h
++++ b/inc/render_ogl.h
+@@ -53,6 +53,9 @@ typedef struct OGLRENDERER
+ } OGLRENDERER;
+ 
+ DWORD WINAPI ogl_render_main(void);
++
++/* PC-CRT: hotkey (keytoggleshader) shows the plain frame instead of the custom shader */
++extern volatile LONG g_pccrt_shader_off;
+ BOOL ogl_create();
+ BOOL ogl_release();
+ 
+diff --git a/src/config.c b/src/config.c
+index 95ea697..c1db1b0 100644
+--- a/src/config.c
++++ b/src/config.c
+@@ -105,6 +105,7 @@ void cfg_load()
+     GET_INT(g_config.hotkeys.unlock_cursor1, "keyunlockcursor1", VK_TAB);
+     GET_INT(g_config.hotkeys.unlock_cursor2, "keyunlockcursor2", VK_RCONTROL);
+     GET_INT(g_config.hotkeys.screenshot, "keyscreenshot", VK_SNAPSHOT);
++    GET_INT(g_config.hotkeys.toggle_shader, "keytoggleshader", VK_F11);
+ 
+     /* Game specific settings */
+     
+diff --git a/src/keyboard.c b/src/keyboard.c
+index f54ba63..c416eb2 100644
+--- a/src/keyboard.c
++++ b/src/keyboard.c
+@@ -7,6 +7,7 @@
+ #include "keyboard.h"
+ #include "mouse.h"
+ #include "screenshot.h"
++#include "render_ogl.h"
+ 
+ 
+ HHOOK g_keyboard_hook;
+@@ -86,6 +87,14 @@ LRESULT CALLBACK keyboard_hook_proc(int code, WPARAM wParam, LPARAM lParam)
+         return 1;
+     }
+ 
++    if (g_config.hotkeys.toggle_shader && wParam == g_config.hotkeys.toggle_shader)
++    {
++        if (key_triggered && key_down)
++            InterlockedExchange(&g_pccrt_shader_off, !g_pccrt_shader_off);
++
++        return 1;
++    }
++
+     if (wParam == g_config.hotkeys.screenshot)
+     {
+         // VK_SNAPSHOT does not have a KEYDOWN event...
+diff --git a/src/opengl_utils.c b/src/opengl_utils.c
+index e315b15..dde6a18 100644
+--- a/src/opengl_utils.c
++++ b/src/opengl_utils.c
+@@ -80,6 +80,7 @@ PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
+ PFNGLACTIVETEXTUREPROC glActiveTexture;
+ PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+ PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
++PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
+ PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+ PFNGLDRAWBUFFERSPROC glDrawBuffers;
+ PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
+@@ -186,6 +187,7 @@ void oglu_init()
+     glActiveTexture = (PFNGLACTIVETEXTUREPROC)xwglGetProcAddress("glActiveTexture");
+     glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)xwglGetProcAddress("glGenFramebuffers");
+     glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)xwglGetProcAddress("glBindFramebuffer");
++    glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)xwglGetProcAddress("glBlitFramebuffer");
+     glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)xwglGetProcAddress("glFramebufferTexture2D");
+     glDrawBuffers = (PFNGLDRAWBUFFERSPROC)xwglGetProcAddress("glDrawBuffers");
+     glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)xwglGetProcAddress("glCheckFramebufferStatus");
+diff --git a/src/render_ogl.c b/src/render_ogl.c
+index aae1d34..677aa9f 100644
+--- a/src/render_ogl.c
++++ b/src/render_ogl.c
+@@ -19,6 +19,8 @@ static void ogl_init_main_program();
+ static void ogl_init_shader1_program();
+ static void ogl_init_shader2_program();
+ static void ogl_render();
++
++volatile LONG g_pccrt_shader_off = FALSE;
+ static BOOL ogl_release_resources();
+ static BOOL ogl_texture_upload_test();
+ static BOOL ogl_shader_test();
+@@ -1238,7 +1240,45 @@ static void ogl_render()
+             glActiveTexture(GL_TEXTURE0);
+         }
+ 
+-        if (g_ogl.shader1_program && g_ogl.shader2_program && g_ogl.main_program)
++        if (g_pccrt_shader_off && g_ogl.shader1_program && g_ogl.main_program && glBlitFramebuffer)
++        {
++            /* PC-CRT: shader switched off by hotkey - plain nearest-neighbour frame */
++            glUseProgram(g_ogl.main_program);
++
++            glViewport(0, 0, g_ddraw.width, g_ddraw.height);
++
++            glBindFramebuffer(GL_FRAMEBUFFER, g_ogl.frame_buffer_id[0]);
++
++            glBindVertexArray(g_ogl.main_vao);
++            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
++            glBindVertexArray(0);
++
++            glActiveTexture(GL_TEXTURE1);
++            glBindTexture(GL_TEXTURE_2D, 0);
++            glActiveTexture(GL_TEXTURE0);
++
++            int x0, y0, w, h;
++
++            if (g_ddraw.child_window_exists)
++            {
++                x0 = 0; y0 = g_ddraw.render.height - g_ddraw.height; w = g_ddraw.width; h = g_ddraw.height;
++            }
++            else
++            {
++                x0 = g_ddraw.render.viewport.x;
++                y0 = g_ddraw.render.viewport.y + g_ddraw.render.opengl_y_align;
++                w = g_ddraw.render.viewport.width;
++                h = g_ddraw.render.viewport.height;
++            }
++
++            /* the framebuffer holds the frame upside down (row 0 at the bottom), flip it on the way out */
++            glBindFramebuffer(GL_READ_FRAMEBUFFER, g_ogl.frame_buffer_id[0]);
++            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
++            glViewport(0, 0, g_ddraw.render.width, g_ddraw.render.height);
++            glBlitFramebuffer(0, 0, g_ddraw.width, g_ddraw.height, x0, y0 + h, x0 + w, y0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
++            glBindFramebuffer(GL_FRAMEBUFFER, 0);
++        }
++        else if (g_ogl.shader1_program && g_ogl.shader2_program && g_ogl.main_program)
+         {
+             static int frames = 0;
+             frames++;
+-- 
+2.55.0.windows.5
+

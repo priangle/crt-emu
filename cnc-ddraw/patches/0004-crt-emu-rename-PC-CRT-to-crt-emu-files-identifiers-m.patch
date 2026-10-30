@@ -1,0 +1,689 @@
+From 075a67b613dac6b88a0a4b4674df59f92b72d92e Mon Sep 17 00:00:00 2001
+From: priangle <203159732+priangle@users.noreply.github.com>
+Date: Thu, 29 Oct 2026 18:05:14 +1300
+Subject: [PATCH 4/5] crt-emu: rename PC-CRT to crt-emu (files, identifiers,
+ markers, panel title)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The project is now called crt-emu. No behaviour changes:
+- src/pccrt/pccrt_osd.cpp -> src/crtemu/crtemu_osd.cpp,
+  inc/pccrt_osd.h -> inc/crtemu_osd.h (Makefile follows).
+- Identifiers pccrt_* / g_pccrt_* / PCCRT_* -> crtemu_* / g_crtemu_* /
+  CRTEMU_*; environment variables of the panel host test:
+  CRTEMU_OSD_SCALE, CRTEMU_OSD_FONT.
+- Edits are marked with "crt-emu" comments instead of "PC-CRT".
+- In-game panel title: "crt-emu · кинескоп".
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_015yjP4pBYqkzwik2NkFF1dK
+---
+ Makefile                                      |  4 +-
+ inc/{pccrt_osd.h => crtemu_osd.h}             | 26 ++++----
+ inc/hook.h                                    |  2 +-
+ inc/render_ogl.h                              |  4 +-
+ .../pccrt_osd.cpp => crtemu/crtemu_osd.cpp}   | 66 +++++++++----------
+ src/hook.c                                    |  4 +-
+ src/keyboard.c                                |  6 +-
+ src/opengl_utils.c                            |  6 +-
+ src/render_ogl.c                              | 50 +++++++-------
+ src/screenshot.c                              |  2 +-
+ src/winapi_hooks.c                            | 32 ++++-----
+ 11 files changed, 101 insertions(+), 101 deletions(-)
+ rename inc/{pccrt_osd.h => crtemu_osd.h} (71%)
+ rename src/{pccrt/pccrt_osd.cpp => crtemu/crtemu_osd.cpp} (93%)
+
+diff --git a/Makefile b/Makefile
+index edb7983..82b40c1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -35,11 +35,11 @@ WINDRES  ?= i686-w64-mingw32-windres
+ SRCS     := $(wildcard src/*.c) $(wildcard src/*/*.c) res.rc
+ OBJS     := $(addsuffix .o, $(basename $(SRCS)))
+ 
+-# PC-CRT in-game panel: Dear ImGui + panel, C++ without the C++ runtime
++# crt-emu in-game panel: Dear ImGui + panel, C++ without the C++ runtime
+ CXX      ?= i686-w64-mingw32-g++
+ CXXFLAGS ?= -Iinc -Isrc/imgui -O2 -Wall -std=c++11 -fno-exceptions -fno-rtti -fno-threadsafe-statics \
+             -DIMGUI_DISABLE_DEMO_WINDOWS -DIMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS -DIMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+-CXXSRCS  := $(wildcard src/imgui/*.cpp) src/imgui/backends/imgui_impl_opengl3.cpp $(wildcard src/pccrt/*.cpp)
++CXXSRCS  := $(wildcard src/imgui/*.cpp) src/imgui/backends/imgui_impl_opengl3.cpp $(wildcard src/crtemu/*.cpp)
+ OBJS     += $(CXXSRCS:.cpp=.o)
+ 
+ %.o: %.cpp
+diff --git a/inc/pccrt_osd.h b/inc/crtemu_osd.h
+similarity index 71%
+rename from inc/pccrt_osd.h
+rename to inc/crtemu_osd.h
+index 90169af..b387cee 100644
+--- a/inc/pccrt_osd.h
++++ b/inc/crtemu_osd.h
+@@ -1,7 +1,7 @@
+-#ifndef PCCRT_OSD_H
+-#define PCCRT_OSD_H
++#ifndef CRTEMU_OSD_H
++#define CRTEMU_OSD_H
+ 
+-/* PC-CRT in-game panel (OpenGL renderer only).
++/* crt-emu in-game panel (OpenGL renderer only).
+  *
+  * keyosd (default F12) opens a Dear ImGui window drawn on top of the shaded frame. It edits the
+  * "#pragma parameter" values of the active shader live: the shader file is compiled with
+@@ -10,7 +10,7 @@
+  * keeps working in stock cnc-ddraw, ShaderGlass and RetroArch.
+  *
+  * Optional "//@..." comment lines in the shader add Russian labels, groups, hints, option lists
+- * for enum-like parameters and presets (see the PC-CRT build.py).
++ * for enum-like parameters and presets (see the crt-emu build.py).
+  */
+ 
+ #ifdef __cplusplus
+@@ -18,29 +18,29 @@ extern "C" {
+ #endif
+ 
+ /* set while the panel is shown; read by the game thread (input) and the render thread */
+-extern volatile long g_pccrt_osd_visible;
++extern volatile long g_crtemu_osd_visible;
+ 
+ /* render thread: parse parameters of <shader_path>.pass1 (or <shader_path> itself).
+    Keeps the live values when the same file is loaded again after a renderer restart. */
+-void pccrt_osd_load(const char* shader_path);
++void crtemu_osd_load(const char* shader_path);
+ 
+ /* opengl_utils: TRUE if this shader file holds the parameters (compile it with PARAMETER_UNIFORM) */
+-int pccrt_osd_is_param_file(const char* file_path);
++int crtemu_osd_is_param_file(const char* file_path);
+ 
+ /* parameter table for the renderer, which sets the uniforms itself */
+-int pccrt_osd_param_count(void);
+-const char* pccrt_osd_param_name(int i);
+-float pccrt_osd_param_value(int i);
++int crtemu_osd_param_count(void);
++const char* crtemu_osd_param_name(int i);
++float crtemu_osd_param_value(int i);
+ 
+ /* render thread, GL context current, default framebuffer bound: draw the panel if visible */
+-void pccrt_osd_render(void* hwnd, int width, int height);
++void crtemu_osd_render(void* hwnd, int width, int height);
+ 
+ /* render thread: the GL context is about to be destroyed (renderer restart / exit) */
+-void pccrt_osd_gl_shutdown(void);
++void crtemu_osd_gl_shutdown(void);
+ 
+ /* game thread (keyboard hook): show / hide the panel. No-op unless the OpenGL renderer loaded
+    a shader with parameters. */
+-void pccrt_osd_toggle(void* hwnd);
++void crtemu_osd_toggle(void* hwnd);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/inc/hook.h b/inc/hook.h
+index d0caade..4405f38 100644
+--- a/inc/hook.h
++++ b/inc/hook.h
+@@ -18,7 +18,7 @@ typedef struct HOOKLISTDATA {
+     HMODULE mod;
+ } HOOKLISTDATA;
+ 
+-/* PC-CRT: 48 entries - user32.dll had filled all 39 and lost its terminator */
++/* crt-emu: 48 entries - user32.dll had filled all 39 and lost its terminator */
+ typedef struct HOOKLIST { char module_name[32]; HOOKLISTDATA data[48]; } HOOKLIST;
+ 
+ typedef BOOL(WINAPI* GETCURSORPOSPROC)(LPPOINT);
+diff --git a/inc/render_ogl.h b/inc/render_ogl.h
+index 5547227..65492a8 100644
+--- a/inc/render_ogl.h
++++ b/inc/render_ogl.h
+@@ -54,8 +54,8 @@ typedef struct OGLRENDERER
+ 
+ DWORD WINAPI ogl_render_main(void);
+ 
+-/* PC-CRT: hotkey (keytoggleshader) shows the plain frame instead of the custom shader */
+-extern volatile LONG g_pccrt_shader_off;
++/* crt-emu: hotkey (keytoggleshader) shows the plain frame instead of the custom shader */
++extern volatile LONG g_crtemu_shader_off;
+ BOOL ogl_create();
+ BOOL ogl_release();
+ 
+diff --git a/src/pccrt/pccrt_osd.cpp b/src/crtemu/crtemu_osd.cpp
+similarity index 93%
+rename from src/pccrt/pccrt_osd.cpp
+rename to src/crtemu/crtemu_osd.cpp
+index a0f736d..e8df9f2 100644
+--- a/src/pccrt/pccrt_osd.cpp
++++ b/src/crtemu/crtemu_osd.cpp
+@@ -1,4 +1,4 @@
+-// PC-CRT in-game panel for the cnc-ddraw OpenGL renderer - see inc/pccrt_osd.h.
++// crt-emu in-game panel for the cnc-ddraw OpenGL renderer - see inc/crtemu_osd.h.
+ //
+ // Threads: the panel is built and drawn on the render thread (owner of the GL context and of
+ // the ImGui context). Input arrives on the game's UI thread through a WH_GETMESSAGE hook that
+@@ -22,15 +22,15 @@
+ #include "imgui.h"
+ #include "imgui_internal.h"
+ #include "backends/imgui_impl_opengl3.h"
+-#include "pccrt_osd.h"
++#include "crtemu_osd.h"
+ 
+-#ifdef PCCRT_OSD_TEST
+-extern "C" { volatile long g_pccrt_shader_off = 0; }
++#ifdef CRTEMU_OSD_TEST
++extern "C" { volatile long g_crtemu_shader_off = 0; }
+ #else
+-extern "C" volatile long g_pccrt_shader_off;   // render_ogl.c, keytoggleshader
++extern "C" volatile long g_crtemu_shader_off;   // render_ogl.c, keytoggleshader
+ #endif
+ 
+-extern "C" { volatile long g_pccrt_osd_visible = 0; }
++extern "C" { volatile long g_crtemu_osd_visible = 0; }
+ 
+ // ---------------------------------------------------------------------------------------------
+ // parameters
+@@ -248,7 +248,7 @@ static int file_exists(const char* path)
+     return f != NULL;
+ }
+ 
+-extern "C" void pccrt_osd_load(const char* shader_path)
++extern "C" void crtemu_osd_load(const char* shader_path)
+ {
+     char path[PATHLEN];
+     snprintf(path, sizeof(path), "%s.pass1", shader_path);
+@@ -275,14 +275,14 @@ static int same_path(const char* a, const char* b)
+ #endif
+ }
+ 
+-extern "C" int pccrt_osd_is_param_file(const char* file_path)
++extern "C" int crtemu_osd_is_param_file(const char* file_path)
+ {
+     return g_loaded && file_path && same_path(file_path, g_file);
+ }
+ 
+-extern "C" int pccrt_osd_param_count(void) { return g_loaded ? NP : 0; }
+-extern "C" const char* pccrt_osd_param_name(int i) { return P[i].name; }
+-extern "C" float pccrt_osd_param_value(int i) { return P[i].value; }
++extern "C" int crtemu_osd_param_count(void) { return g_loaded ? NP : 0; }
++extern "C" const char* crtemu_osd_param_name(int i) { return P[i].name; }
++extern "C" float crtemu_osd_param_value(int i) { return P[i].value; }
+ 
+ // rewrite the #define and #pragma parameter values in the shader file
+ static int save_params(void)
+@@ -536,7 +536,7 @@ static int is_input_msg(UINT m)
+ 
+ static LRESULT CALLBACK msg_hook(int code, WPARAM wParam, LPARAM lParam)
+ {
+-    if (code >= 0 && g_pccrt_osd_visible && lParam)
++    if (code >= 0 && g_crtemu_osd_visible && lParam)
+     {
+         MSG* m = (MSG*)lParam;
+         if (is_input_msg(m->message))
+@@ -549,10 +549,10 @@ static LRESULT CALLBACK msg_hook(int code, WPARAM wParam, LPARAM lParam)
+ }
+ #endif
+ 
+-extern "C" void pccrt_osd_toggle(void* hwnd)
++extern "C" void crtemu_osd_toggle(void* hwnd)
+ {
+     if (!g_loaded) return;
+-    long show = !g_pccrt_osd_visible;
++    long show = !g_crtemu_osd_visible;
+ #ifdef _WIN32
+     if (show)
+     {
+@@ -568,9 +568,9 @@ extern "C" void pccrt_osd_toggle(void* hwnd)
+     (void)hwnd;
+ #endif
+ #ifdef _WIN32
+-    InterlockedExchange(&g_pccrt_osd_visible, show);
++    InterlockedExchange(&g_crtemu_osd_visible, show);
+ #else
+-    g_pccrt_osd_visible = show;
++    g_crtemu_osd_visible = show;
+ #endif
+ }
+ 
+@@ -614,7 +614,7 @@ static float dpi_scale(void* hwnd)
+     return dpi >= 96 ? dpi / 96.0f : 1.0f;
+ #else
+     (void)hwnd;
+-    const char* s = getenv("PCCRT_OSD_SCALE");
++    const char* s = getenv("CRTEMU_OSD_SCALE");
+     return s ? (float)atof(s) : 1.0f;
+ #endif
+ }
+@@ -634,7 +634,7 @@ static void load_font(ImGuiIO& io)
+     }
+ #else
+     (void)names;
+-    const char* f = getenv("PCCRT_OSD_FONT");
++    const char* f = getenv("CRTEMU_OSD_FONT");
+     snprintf(path, sizeof(path), "%s", f ? f : "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+     if (file_exists(path) && io.Fonts->AddFontFromFileTTF(path, 17.0f)) return;
+ #endif
+@@ -778,7 +778,7 @@ static void draw_ui(void)
+     ImGui::SetNextWindowSizeConstraints(ImVec2(360 * s, 0), ImVec2(io.DisplaySize.x - 56 * s, io.DisplaySize.y - 56 * s));
+     ImGui::SetNextWindowSize(ImVec2(470 * s, 0), ImGuiCond_FirstUseEver);
+     bool open = true;
+-    if (!ImGui::Begin("PC-CRT · кинескоп###pccrt", &open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
++    if (!ImGui::Begin("crt-emu · кинескоп###crtemu", &open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
+     {
+         ImGui::End();
+         return;
+@@ -794,14 +794,14 @@ static void draw_ui(void)
+     }
+     else if (NPR == 0) ImGui::TextDisabled("%s", "Пресетов в шейдере нет");
+     ImGui::SameLine();
+-    bool off = g_pccrt_shader_off != 0;
++    bool off = g_crtemu_shader_off != 0;
+     if (off) ImGui::PushStyleColor(ImGuiCol_Button, rgb(226, 166, 86, 0.55f));
+     if (ImGui::Button("До / после (F11)"))
+     {
+ #ifdef _WIN32
+-        InterlockedExchange(&g_pccrt_shader_off, !g_pccrt_shader_off);
++        InterlockedExchange(&g_crtemu_shader_off, !g_crtemu_shader_off);
+ #else
+-        g_pccrt_shader_off = !g_pccrt_shader_off;
++        g_crtemu_shader_off = !g_crtemu_shader_off;
+ #endif
+     }
+     if (off) ImGui::PopStyleColor();
+@@ -877,16 +877,16 @@ static void draw_ui(void)
+     if (!open)
+     {
+ #ifdef _WIN32
+-        InterlockedExchange(&g_pccrt_osd_visible, 0);
++        InterlockedExchange(&g_crtemu_osd_visible, 0);
+ #else
+-        g_pccrt_osd_visible = 0;
++        g_crtemu_osd_visible = 0;
+ #endif
+     }
+ }
+ 
+-extern "C" void pccrt_osd_render(void* hwnd, int width, int height)
++extern "C" void crtemu_osd_render(void* hwnd, int width, int height)
+ {
+-    if (!g_pccrt_osd_visible || !g_loaded || width <= 0 || height <= 0) return;
++    if (!g_crtemu_osd_visible || !g_loaded || width <= 0 || height <= 0) return;
+     ensure_context(hwnd);
+     ImGui::SetCurrentContext(g_ctx);
+     if (!g_gl_ready)
+@@ -910,7 +910,7 @@ extern "C" void pccrt_osd_render(void* hwnd, int width, int height)
+     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+ }
+ 
+-extern "C" void pccrt_osd_gl_shutdown(void)
++extern "C" void crtemu_osd_gl_shutdown(void)
+ {
+     if (g_ctx && g_gl_ready)
+     {
+@@ -920,11 +920,11 @@ extern "C" void pccrt_osd_gl_shutdown(void)
+     }
+ }
+ 
+-#ifdef PCCRT_OSD_TEST
++#ifdef CRTEMU_OSD_TEST
+ // host test driver: feed synthetic input and draw one frame into the current GL framebuffer
+-extern "C" void pccrt_osd_test_input(unsigned msg, unsigned long long w, long long l) { q_push(msg, w, l); }
+-extern "C" void pccrt_osd_test_show(int on) { g_pccrt_osd_visible = on; }
+-extern "C" const char* pccrt_osd_test_status(void) { return g_status; }
+-extern "C" void pccrt_osd_test_set(const char* name, float v) { Param* p = find_param(name, strlen(name)); if (p) p->value = v; }
+-extern "C" int pccrt_osd_test_save(void) { return save_params(); }
++extern "C" void crtemu_osd_test_input(unsigned msg, unsigned long long w, long long l) { q_push(msg, w, l); }
++extern "C" void crtemu_osd_test_show(int on) { g_crtemu_osd_visible = on; }
++extern "C" const char* crtemu_osd_test_status(void) { return g_status; }
++extern "C" void crtemu_osd_test_set(const char* name, float v) { Param* p = find_param(name, strlen(name)); if (p) p->value = v; }
++extern "C" int crtemu_osd_test_save(void) { return save_params(); }
+ #endif
+diff --git a/src/hook.c b/src/hook.c
+index 8804f61..667b144 100644
+--- a/src/hook.c
++++ b/src/hook.c
+@@ -83,7 +83,7 @@ SETWINDOWLONGWPROC real_SetWindowLongW = SetWindowLongW;
+ SETWINDOWLONGWPROC real_SetWindowLongW;
+ #endif
+ 
+-static PROC g_pccrt_dummy_proc;
++static PROC g_crtemu_dummy_proc;
+ 
+ HOOKLIST g_hook_hooklist[] =
+ {
+@@ -91,7 +91,7 @@ HOOKLIST g_hook_hooklist[] =
+         "user32.dll",
+         {
+             { "GetCursorPos", (PROC)fake_GetCursorPos, (PROC*)&real_GetCursorPos, 0 },
+-            { "SetThreadDpiAwarenessContext", (PROC)fake_SetThreadDpiAwarenessContext, (PROC*)&g_pccrt_dummy_proc, 0 },
++            { "SetThreadDpiAwarenessContext", (PROC)fake_SetThreadDpiAwarenessContext, (PROC*)&g_crtemu_dummy_proc, 0 },
+             { "ClipCursor", (PROC)fake_ClipCursor, (PROC*)&real_ClipCursor, 0 },
+             { "ShowCursor", (PROC)fake_ShowCursor, (PROC*)&real_ShowCursor, 0 },
+             { "SetCursor", (PROC)fake_SetCursor, (PROC*)&real_SetCursor, 0 },
+diff --git a/src/keyboard.c b/src/keyboard.c
+index 859d5c4..2cd50d8 100644
+--- a/src/keyboard.c
++++ b/src/keyboard.c
+@@ -8,7 +8,7 @@
+ #include "mouse.h"
+ #include "screenshot.h"
+ #include "render_ogl.h"
+-#include "pccrt_osd.h"
++#include "crtemu_osd.h"
+ 
+ 
+ HHOOK g_keyboard_hook;
+@@ -91,7 +91,7 @@ LRESULT CALLBACK keyboard_hook_proc(int code, WPARAM wParam, LPARAM lParam)
+     if (g_config.hotkeys.toggle_osd && wParam == g_config.hotkeys.toggle_osd)
+     {
+         if (key_triggered && key_down)
+-            pccrt_osd_toggle(g_ddraw.hwnd);
++            crtemu_osd_toggle(g_ddraw.hwnd);
+ 
+         return 1;
+     }
+@@ -99,7 +99,7 @@ LRESULT CALLBACK keyboard_hook_proc(int code, WPARAM wParam, LPARAM lParam)
+     if (g_config.hotkeys.toggle_shader && wParam == g_config.hotkeys.toggle_shader)
+     {
+         if (key_triggered && key_down)
+-            InterlockedExchange(&g_pccrt_shader_off, !g_pccrt_shader_off);
++            InterlockedExchange(&g_crtemu_shader_off, !g_crtemu_shader_off);
+ 
+         return 1;
+     }
+diff --git a/src/opengl_utils.c b/src/opengl_utils.c
+index 35b3f94..9f2693b 100644
+--- a/src/opengl_utils.c
++++ b/src/opengl_utils.c
+@@ -6,7 +6,7 @@
+ #include "hook.h"
+ #include "config.h"
+ #include "versionhelpers.h"
+-#include "pccrt_osd.h"
++#include "crtemu_osd.h"
+ 
+ PFNWGLCREATECONTEXTPROC xwglCreateContext;
+ PFNWGLDELETECONTEXTPROC xwglDeleteContext;
+@@ -428,8 +428,8 @@ GLuint oglu_build_program_from_file(const char* file_path, BOOL core_profile)
+ 
+             char* vert_source = calloc(file_size + 128, 1);
+             char* frag_source = calloc(file_size + 128, 1);
+-            /* PC-CRT: parameters become uniforms driven by the in-game panel */
+-            const char* param_define = pccrt_osd_is_param_file(file_path) ? "#define PARAMETER_UNIFORM\n" : "";
++            /* crt-emu: parameters become uniforms driven by the in-game panel */
++            const char* param_define = crtemu_osd_is_param_file(file_path) ? "#define PARAMETER_UNIFORM\n" : "";
+ 
+             if (frag_source && vert_source)
+             {
+diff --git a/src/render_ogl.c b/src/render_ogl.c
+index c6ce91c..0a567f8 100644
+--- a/src/render_ogl.c
++++ b/src/render_ogl.c
+@@ -8,7 +8,7 @@
+ #include "openglshader.h"
+ #include "render_gdi.h"
+ #include "render_ogl.h"
+-#include "pccrt_osd.h"
++#include "crtemu_osd.h"
+ #include "utils.h"
+ #include "debug.h"
+ 
+@@ -21,16 +21,16 @@ static void ogl_init_shader1_program();
+ static void ogl_init_shader2_program();
+ static void ogl_render();
+ 
+-volatile LONG g_pccrt_shader_off = FALSE;
++volatile LONG g_crtemu_shader_off = FALSE;
+ 
+-/* PC-CRT: shader parameters as uniforms (values come from the in-game panel) */
+-static GLuint g_pccrt_prog[4];
+-static GLint g_pccrt_loc[4][64];
+-static int g_pccrt_next;
++/* crt-emu: shader parameters as uniforms (values come from the in-game panel) */
++static GLuint g_crtemu_prog[4];
++static GLint g_crtemu_loc[4][64];
++static int g_crtemu_next;
+ 
+-static void pccrt_apply_params(GLuint prog)
++static void crtemu_apply_params(GLuint prog)
+ {
+-    int n = pccrt_osd_param_count();
++    int n = crtemu_osd_param_count();
+ 
+     if (!n || !prog || !glGetUniformLocation || !glUniform1f)
+         return;
+@@ -42,7 +42,7 @@ static void pccrt_apply_params(GLuint prog)
+ 
+     for (int i = 0; i < 4; i++)
+     {
+-        if (g_pccrt_prog[i] == prog)
++        if (g_crtemu_prog[i] == prog)
+         {
+             k = i;
+             break;
+@@ -51,17 +51,17 @@ static void pccrt_apply_params(GLuint prog)
+ 
+     if (k < 0)
+     {
+-        k = g_pccrt_next++ & 3;
+-        g_pccrt_prog[k] = prog;
++        k = g_crtemu_next++ & 3;
++        g_crtemu_prog[k] = prog;
+ 
+         for (int i = 0; i < n; i++)
+-            g_pccrt_loc[k][i] = glGetUniformLocation(prog, pccrt_osd_param_name(i));
++            g_crtemu_loc[k][i] = glGetUniformLocation(prog, crtemu_osd_param_name(i));
+     }
+ 
+     for (int i = 0; i < n; i++)
+     {
+-        if (g_pccrt_loc[k][i] != -1)
+-            glUniform1f(g_pccrt_loc[k][i], pccrt_osd_param_value(i));
++        if (g_crtemu_loc[k][i] != -1)
++            glUniform1f(g_crtemu_loc[k][i], crtemu_osd_param_value(i));
+     }
+ }
+ static BOOL ogl_release_resources();
+@@ -317,7 +317,7 @@ static void ogl_build_programs()
+                 g_ddraw.render.viewport.height != g_ddraw.height ||
+                 g_config.vhack)
+             {
+-                pccrt_osd_load(shader_path);
++                crtemu_osd_load(shader_path);
+ 
+                 g_ogl.shader1_program = oglu_build_program_from_file(shader_path, core_profile);
+ 
+@@ -1046,7 +1046,7 @@ static void ogl_render()
+     DWORD timeout = g_config.minfps > 0 ? g_ddraw.minfps_tick_len : INFINITE;
+ 
+     while (g_ogl.use_opengl && g_ddraw.render.run &&
+-        (g_config.minfps < 0 || WaitForSingleObject(g_ddraw.render.sem, g_pccrt_osd_visible ? 16 : timeout) != WAIT_FAILED) &&
++        (g_config.minfps < 0 || WaitForSingleObject(g_ddraw.render.sem, g_crtemu_osd_visible ? 16 : timeout) != WAIT_FAILED) &&
+         g_ddraw.render.run)
+     {
+ #if _DEBUG
+@@ -1285,9 +1285,9 @@ static void ogl_render()
+             glActiveTexture(GL_TEXTURE0);
+         }
+ 
+-        if (g_pccrt_shader_off && g_ogl.shader1_program && g_ogl.main_program && glBlitFramebuffer)
++        if (g_crtemu_shader_off && g_ogl.shader1_program && g_ogl.main_program && glBlitFramebuffer)
+         {
+-            /* PC-CRT: shader switched off by hotkey - plain nearest-neighbour frame */
++            /* crt-emu: shader switched off by hotkey - plain nearest-neighbour frame */
+             glUseProgram(g_ogl.main_program);
+ 
+             glViewport(0, 0, g_ddraw.width, g_ddraw.height);
+@@ -1352,7 +1352,7 @@ static void ogl_render()
+             }
+ 
+             glUseProgram(g_ogl.shader1_program);
+-            pccrt_apply_params(g_ogl.shader1_program);
++            crtemu_apply_params(g_ogl.shader1_program);
+             glActiveTexture(GL_TEXTURE0);
+             glBindTexture(GL_TEXTURE_2D, g_ogl.frame_buffer_tex_id[0]);
+ 
+@@ -1383,7 +1383,7 @@ static void ogl_render()
+             }
+ 
+             glUseProgram(g_ogl.shader2_program);
+-            pccrt_apply_params(g_ogl.shader2_program);
++            crtemu_apply_params(g_ogl.shader2_program);
+             glActiveTexture(GL_TEXTURE0);
+             glBindTexture(GL_TEXTURE_2D, g_ogl.frame_buffer_tex_id[1]);
+ 
+@@ -1434,7 +1434,7 @@ static void ogl_render()
+             /* apply filter */
+ 
+             glUseProgram(g_ogl.shader1_program);
+-            pccrt_apply_params(g_ogl.shader1_program);
++            crtemu_apply_params(g_ogl.shader1_program);
+             glActiveTexture(GL_TEXTURE0);
+             glBindTexture(GL_TEXTURE_2D, g_ogl.frame_buffer_tex_id[0]);
+ 
+@@ -1465,10 +1465,10 @@ static void ogl_render()
+         if (g_ddraw.bnet_active)
+             glClear(GL_COLOR_BUFFER_BIT);
+ 
+-        if (g_pccrt_osd_visible)
++        if (g_crtemu_osd_visible)
+         {
+             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+-            pccrt_osd_render(g_ddraw.hwnd, g_ddraw.render.width, g_ddraw.render.height);
++            crtemu_osd_render(g_ddraw.hwnd, g_ddraw.render.width, g_ddraw.render.height);
+         }
+ 
+         SwapBuffers(g_ogl.hdc);
+@@ -1495,8 +1495,8 @@ static void ogl_render()
+ 
+ static BOOL ogl_release_resources()
+ {
+-    pccrt_osd_gl_shutdown();
+-    memset(g_pccrt_prog, 0, sizeof(g_pccrt_prog));
++    crtemu_osd_gl_shutdown();
++    memset(g_crtemu_prog, 0, sizeof(g_crtemu_prog));
+ 
+     glDeleteTextures(TEXTURE_COUNT, g_ogl.surface_tex_ids);
+ 
+diff --git a/src/screenshot.c b/src/screenshot.c
+index 0d44ba8..2b89141 100644
+--- a/src/screenshot.c
++++ b/src/screenshot.c
+@@ -139,7 +139,7 @@ BOOL ss_take_screenshot(IDirectDrawSurfaceImpl* src)
+ 
+     for (int i = 0; i < strlen(title); i++)
+     {
+-        /* PC-CRT: ':' and other characters Windows forbids in file names would turn
++        /* crt-emu: ':' and other characters Windows forbids in file names would turn
+            "Game: Subtitle" into an NTFS alternate data stream, so the png is invisible */
+         if (title[i] == ' ' || (unsigned char)title[i] < 32 || strchr("<>:\"/\\|?*", title[i]))
+         {
+diff --git a/src/winapi_hooks.c b/src/winapi_hooks.c
+index 4705c97..7ce4fe9 100644
+--- a/src/winapi_hooks.c
++++ b/src/winapi_hooks.c
+@@ -16,7 +16,7 @@
+ #include "render_gdi.h"
+ #include "render_d3d9.h"
+ #include "render_ogl.h"
+-#include "pccrt_osd.h"
++#include "crtemu_osd.h"
+ #include "directinput.h"
+ #include "ddsurface.h"
+ #include "ddclipper.h"
+@@ -29,13 +29,13 @@
+ 
+ static BOOL fake_GetCursorPos_impl(LPPOINT lpPoint);
+ 
+-/* PC-CRT: while the in-game panel is open the game keeps seeing the last cursor position */
++/* crt-emu: while the in-game panel is open the game keeps seeing the last cursor position */
+ BOOL WINAPI fake_GetCursorPos(LPPOINT lpPoint)
+ {
+     static POINT last;
+     static BOOL have_last;
+ 
+-    if (g_pccrt_osd_visible && have_last && lpPoint)
++    if (g_crtemu_osd_visible && have_last && lpPoint)
+     {
+         *lpPoint = last;
+         return TRUE;
+@@ -972,7 +972,7 @@ HDC WINAPI fake_BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
+ 
+ SHORT WINAPI fake_GetKeyState(int nVirtKey)
+ {
+-    if (g_pccrt_osd_visible) /* PC-CRT: input belongs to the in-game panel */
++    if (g_crtemu_osd_visible) /* crt-emu: input belongs to the in-game panel */
+         return 0;
+ 
+     if (g_config.windowed && g_ddraw.ref && g_ddraw.hwnd && !util_in_foreground())
+@@ -985,7 +985,7 @@ SHORT WINAPI fake_GetKeyState(int nVirtKey)
+ 
+ SHORT WINAPI fake_GetAsyncKeyState(int vKey)
+ {
+-    if (g_pccrt_osd_visible)
++    if (g_crtemu_osd_visible)
+         return 0;
+ 
+     if (g_config.windowed && g_ddraw.ref && g_ddraw.hwnd && !util_in_foreground())
+@@ -2409,7 +2409,7 @@ PGETFRAME WINAPI fake_AVIStreamGetFrameOpen(PAVISTREAM pavi, LPBITMAPINFOHEADER
+ 
+ 
+ /* ---------------------------------------------------------------------------------
+- * PC-CRT patch: keep DPI-unaware thread contexts out of the process.
++ * crt-emu patch: keep DPI-unaware thread contexts out of the process.
+  *
+  * Some fan patches (HoMM3 HD mod in its "original" DirectDraw modes) switch the main
+  * thread to DPI_AWARENESS_CONTEXT_UNAWARE before the game creates its window. Windows
+@@ -2427,10 +2427,10 @@ static SETTHREADDPIAWARENESSCONTEXTPROC real_SetThreadDpiAwarenessContext;
+ static GETTHREADDPIAWARENESSCONTEXTPROC real_GetThreadDpiAwarenessContext;
+ static AREDPIAWARENESSCONTEXTSEQUALPROC real_AreDpiAwarenessContextsEqual;
+ 
+-#define PCCRT_DPI_UNAWARE              ((HANDLE)-1)
+-#define PCCRT_DPI_SYSTEM_AWARE         ((HANDLE)-2)
+-#define PCCRT_DPI_PER_MONITOR_AWARE_V2 ((HANDLE)-4)
+-#define PCCRT_DPI_UNAWARE_GDISCALED    ((HANDLE)-5)
++#define CRTEMU_DPI_UNAWARE              ((HANDLE)-1)
++#define CRTEMU_DPI_SYSTEM_AWARE         ((HANDLE)-2)
++#define CRTEMU_DPI_PER_MONITOR_AWARE_V2 ((HANDLE)-4)
++#define CRTEMU_DPI_UNAWARE_GDISCALED    ((HANDLE)-5)
+ 
+ static void dpi_resolve()
+ {
+@@ -2451,15 +2451,15 @@ static void dpi_resolve()
+ 
+ static BOOL dpi_is_unaware(HANDLE ctx)
+ {
+-    if (ctx == PCCRT_DPI_UNAWARE || ctx == PCCRT_DPI_SYSTEM_AWARE || ctx == PCCRT_DPI_UNAWARE_GDISCALED)
++    if (ctx == CRTEMU_DPI_UNAWARE || ctx == CRTEMU_DPI_SYSTEM_AWARE || ctx == CRTEMU_DPI_UNAWARE_GDISCALED)
+         return TRUE;
+ 
+     if (real_AreDpiAwarenessContextsEqual && ctx)
+     {
+         return
+-            real_AreDpiAwarenessContextsEqual(ctx, PCCRT_DPI_UNAWARE) ||
+-            real_AreDpiAwarenessContextsEqual(ctx, PCCRT_DPI_SYSTEM_AWARE) ||
+-            real_AreDpiAwarenessContextsEqual(ctx, PCCRT_DPI_UNAWARE_GDISCALED);
++            real_AreDpiAwarenessContextsEqual(ctx, CRTEMU_DPI_UNAWARE) ||
++            real_AreDpiAwarenessContextsEqual(ctx, CRTEMU_DPI_SYSTEM_AWARE) ||
++            real_AreDpiAwarenessContextsEqual(ctx, CRTEMU_DPI_UNAWARE_GDISCALED);
+     }
+ 
+     return FALSE;
+@@ -2476,7 +2476,7 @@ HANDLE WINAPI fake_SetThreadDpiAwarenessContext(HANDLE dpiContext)
+     {
+         TRACE("SetThreadDpiAwarenessContext(%p) blocked by fix_dpi_unaware [%p]\n", dpiContext, _ReturnAddress());
+ 
+-        return real_GetThreadDpiAwarenessContext ? real_GetThreadDpiAwarenessContext() : PCCRT_DPI_PER_MONITOR_AWARE_V2;
++        return real_GetThreadDpiAwarenessContext ? real_GetThreadDpiAwarenessContext() : CRTEMU_DPI_PER_MONITOR_AWARE_V2;
+     }
+ 
+     return real_SetThreadDpiAwarenessContext(dpiContext);
+@@ -2499,7 +2499,7 @@ void dpi_fix_init()
+         {
+             TRACE("dpi_fix_init: main thread was DPI-unaware, switching to per-monitor v2\n");
+ 
+-            if (!real_SetThreadDpiAwarenessContext(PCCRT_DPI_PER_MONITOR_AWARE_V2))
++            if (!real_SetThreadDpiAwarenessContext(CRTEMU_DPI_PER_MONITOR_AWARE_V2))
+                 real_SetThreadDpiAwarenessContext((HANDLE)-3); /* per-monitor v1 */
+         }
+     }
+-- 
+2.55.0.windows.5
+
