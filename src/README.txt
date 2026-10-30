@@ -20,9 +20,10 @@ Install with the setup program (easiest)
   settings are kept. The same window has an "Uninstall" button: it puts back
   the files the setup replaced and the HD mod settings it switched (unless
   you changed them yourself since) and deletes your tube settings too.
-  The first line of the window is the language (English or Русский) of the
-  setup and of the F12 panel in the game. The panel switches after "Install"
-  or "Reinstall" and a restart of the game.
+  The first line of the window is the language of the setup (English or
+  Русский). The F12 panel in the game speaks the game's language (else that
+  of Windows, else English); the EN and RU buttons in the panel switch it at
+  once, and the choice is kept.
   Windows may warn about an unknown publisher:
   "More info" -> "Run anyway".
 

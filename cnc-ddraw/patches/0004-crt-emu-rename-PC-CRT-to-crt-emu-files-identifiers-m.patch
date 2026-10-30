@@ -1,7 +1,7 @@
 From 075a67b613dac6b88a0a4b4674df59f92b72d92e Mon Sep 17 00:00:00 2001
 From: priangle <203159732+priangle@users.noreply.github.com>
 Date: Thu, 29 Oct 2026 18:05:14 +1300
-Subject: [PATCH 4/5] crt-emu: rename PC-CRT to crt-emu (files, identifiers,
+Subject: [PATCH 4/6] crt-emu: rename PC-CRT to crt-emu (files, identifiers,
  markers, panel title)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

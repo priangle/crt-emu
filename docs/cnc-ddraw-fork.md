@@ -2,7 +2,7 @@
 
 Base: [FunkyFr3sh/cnc-ddraw](https://github.com/FunkyFr3sh/cnc-ddraw), commit `279a057` (7.1.0.1), MIT license.
 Fork: [priangle/cnc-ddraw](https://github.com/priangle/cnc-ddraw) (public), included in crt-emu as the submodule `third_party/cnc-ddraw`.
-The `crt-emu` branch has five commits (a copy is in `cnc-ddraw/patches/`). Before the project was renamed to crt-emu, the branch was called `pccrt`. GitHub redirects only web links to the old name; git will not find the branch by the name `pccrt`.
+The `crt-emu` branch has six commits (a copy is in `cnc-ddraw/patches/`). Before the project was renamed to crt-emu, the branch was called `pccrt`. GitHub redirects only web links to the old name; git will not find the branch by the name `pccrt`.
 
 | Commit | What | Files |
 |---|---|---|
@@ -11,6 +11,7 @@ The `crt-emu` branch has five commits (a copy is in `cnc-ddraw/patches/`). Befor
 | 3 | `keyosd` (F12): a Dear ImGui 1.92.9 panel (embedded in `src/imgui`), parameters as uniforms, input via `WH_GETMESSAGE`. The `HOOKLIST` hook table is extended from 39 to 48 entries: user32 overflowed it and lost the terminator | `src/crtemu/crtemu_osd.cpp`, `inc/crtemu_osd.h` (in this commit still `src/pccrt/pccrt_osd.cpp`, `inc/pccrt_osd.h`), `src/render_ogl.c`, `src/opengl_utils.c`, `src/keyboard.c`, `src/winapi_hooks.c`, `inc/hook.h`, `Makefile` |
 | 4 | Rename PC-CRT → crt-emu: panel files, identifiers `crtemu_*`/`g_crtemu_*`/`CRTEMU_*`, marker comments, panel title "crt-emu · кинескоп". No change in behavior | all files of commits 1–3 that carry markers |
 | 5 | Panel language: `lang=` from `install.ini` next to the shader (`en` by default, `ru`), metadata blocks `//@lang|xx`, the panel's own strings in an EN/RU table. Under `CRTEMU_OSD_TEST` — getters for `test/osd_meta_test.py` | `src/crtemu/crtemu_osd.cpp`, `inc/crtemu_osd.h` |
+| 6 | EN / RU buttons in the panel: the language switches at once (live values kept), the choice goes to `install.ini`. Without `lang=` the panel follows the game's language (HD mod profile), then Windows, then English. One helper writes the shader file and `install.ini` through `.tmp` | `src/crtemu/crtemu_osd.cpp` |
 
 New `ddraw.ini` keys: `fix_dpi_unaware=true`, `keytoggleshader=0x7A`, `keyosd=0x7B`.
 

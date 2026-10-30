@@ -10,7 +10,8 @@ high-density displays (5K, 4K) at an integer scale: 1280x720 → 4x on 5120x2880
 - **PrintScreen** — a screenshot of the game frame without the effect.
 - Windows display scaling above 100% is supported (tested at 200%): a custom cnc-ddraw build fixes
   the conflict with the HD mod.
-- The setup and the F12 panel speak English or Russian, chosen in the setup.
+- English or Russian: the setup follows Windows (or your choice in its first line), the F12 panel
+  follows the game's language (else that of Windows, else English), and its EN / RU buttons switch it at once.
 
 All tuning happens inside the game; there is no separate configuration tool.
 
@@ -26,14 +27,14 @@ All tuning happens inside the game; there is no separate configuration tool.
 ## Installation
 1. Close the game and HD_Launcher.
 2. Download `crt-emu-setup-<version>.exe` from [Releases](https://github.com/priangle/crt-emu/releases)
-   and run it. The first line of the window is the language of the setup and of the F12 panel.
+   and run it. The first line of the window is the language of the setup.
    The setup finds the game (or pick the folder with "Browse..."), installs the files and
    switches the HD mod to the "16-bit DirectDraw (original)" renderer.
    The setup is not signed, so Windows may warn about an unknown publisher:
    "More info" → "Run anyway".
 3. Start the game through HD_Launcher and press F12.
 
-Run the setup again to reinstall or to change the language: your tube settings are kept
+Run the setup again to reinstall: your tube settings and the panel language are kept
 ("Keep my tube settings when reinstalling" is on by default).
 The same window has an "Uninstall" button: it removes crt-emu, puts back the `ddraw.dll` and
 `ddraw.ini` it replaced and the HD mod renderer and system cursors it switched (unless you changed

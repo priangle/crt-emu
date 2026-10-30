@@ -65,6 +65,23 @@ int main(int argc, char** argv)
     int back = 0;
     char* undo = crtemu_set_hd_key("<Graphics.v2.Mode>\t=  0  {renderer}\r\n", "<Graphics.v2.Mode>", "2", &back);
     if (back != 1 || strcmp(undo, "<Graphics.v2.Mode>\t=  2  {renderer}\r\n") != 0) { puts("FAIL set back"); fails++; }
+    /* lang= of the old install.ini survives a reinstall: key in any case, spaces trimmed, a longer key
+       or a key inside a value is not it, the last line wins, too long does not fit */
+    const char* rec = "[crt-emu]\r\nlanguage=de\r\nversion=2.1\r\nx = lang=xx\r\n  LANG = ru  \r\nforeign=0";
+    if (!crtemu_get_ini_value(rec, "lang", v, sizeof(v)) || strcmp(v, "ru") != 0) { puts("FAIL ini lang"); fails++; }
+    if (!crtemu_get_ini_value("lang=en\nlang=ru", "lang", v, sizeof(v)) || strcmp(v, "ru") != 0) { puts("FAIL ini last"); fails++; }
+    if (crtemu_get_ini_value("[crt-emu]\r\nversion=2.1\r\n", "lang", v, sizeof(v)) || crtemu_get_ini_value("", "lang", v, sizeof(v)))
+    { puts("FAIL ini missing"); fails++; }
+    if (crtemu_get_ini_value("lang=ru\r\n", "lang", v, 2)) { puts("FAIL ini too long"); fails++; }
+    /* a reinstall keeps the panel's lang=, not the one setups before 2.2 wrote for themselves */
+    if (crtemu_panel_lang("[crt-emu]\r\nversion=2.1\r\nlang=ru\r\n", v, sizeof(v)) ||
+        crtemu_panel_lang("[crt-emu]\r\nversion=2.0\r\nlang=en\r\n", v, sizeof(v)) ||
+        crtemu_panel_lang("[crt-emu]\r\nversion=2.2\r\n", v, sizeof(v)))
+    { puts("FAIL panel lang dropped"); fails++; }
+    if (!crtemu_panel_lang("[crt-emu]\r\nversion=2.2\r\nlang=en\r\n", v, sizeof(v)) || strcmp(v, "en") != 0 ||
+        !crtemu_panel_lang("[crt-emu]\r\nlang=ru\r\n", v, sizeof(v)) || strcmp(v, "ru") != 0 ||
+        !crtemu_panel_lang("[crt-emu]\r\nversion=2.10\r\nlang=en\r\n", v, sizeof(v)) || strcmp(v, "en") != 0)
+    { puts("FAIL panel lang kept"); fails++; }
     puts(fails ? "FAILED" : "ok");
     return fails != 0;
 }

@@ -1,7 +1,7 @@
 From 3a4080b4d7124845a2fbb54d35b527c3f61588dd Mon Sep 17 00:00:00 2001
 From: PC-CRT build <noreply@anthropic.com>
 Date: Mon, 26 Oct 2026 10:13:45 +1300
-Subject: [PATCH 2/5] PC-CRT: hotkey to switch the custom shader off and on
+Subject: [PATCH 2/6] PC-CRT: hotkey to switch the custom shader off and on
  (keytoggleshader, default F11)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

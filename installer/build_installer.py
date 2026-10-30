@@ -14,7 +14,7 @@ ROOT = os.path.dirname(HERE)
 # CRTEMU_MINGW_INCLUDE: extra include dir for windres if it cannot find <windows.h> by itself.
 BIN = os.environ.get("CRTEMU_MINGW_BIN", "")
 INC = os.environ.get("CRTEMU_MINGW_INCLUDE", "")
-VERSION = "2.1"
+VERSION = "2.2"
 
 # (source, path inside the game folder, kind)
 PAYLOAD = [

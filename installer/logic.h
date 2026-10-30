@@ -21,4 +21,12 @@ int crtemu_contains(const char* hay, size_t n, const char* needle);
 /* Every occurrence of `from` (ASCII case-insensitive) replaced by `to`; *count = replacements. malloc'd. */
 char* crtemu_replace_ci(const char* text, const char* from, const char* to, int* count);
 
+/* "key = value" line of an ini file (key ASCII case-insensitive, spaces around both trimmed): the value
+   of the last such line into out (n bytes with the terminator); 1 if found and it fits. */
+int crtemu_get_ini_value(const char* text, const char* key, char* out, size_t n);
+
+/* lang= of an old install.ini that a reinstall keeps: the F12 panel's choice. Records with version
+   below 2.2 carry the old setup's own language there and give 0. 1 if kept. */
+int crtemu_panel_lang(const char* record, char* out, size_t n);
+
 #endif

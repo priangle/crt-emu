@@ -255,3 +255,41 @@ char* crtemu_replace_ci(const char* text, const char* from, const char* to, int*
     }
     return b.p;
 }
+
+int crtemu_get_ini_value(const char* text, const char* key, char* out, size_t n)
+{
+    const char *ls, *le, *lend, *p;
+    size_t kl = strlen(key);
+    int found = 0;
+    for (p = text; (p = next_line(p, &ls, &le, &lend)) != NULL;)
+    {
+        const char* s = skip_ws(ls, le);
+        const char* eq = (const char*)memchr(s, '=', le - s);
+        if (!eq) continue;
+        const char* ke = eq;
+        while (ke > s && (ke[-1] == ' ' || ke[-1] == '\t')) ke--;
+        if ((size_t)(ke - s) != kl) continue;
+        size_t i = 0;
+        while (i < kl && lower((unsigned char)s[i]) == lower((unsigned char)key[i])) i++;
+        if (i < kl) continue;
+        const char* v0 = skip_ws(eq + 1, le);
+        const char* v1 = le;
+        while (v1 > v0 && (v1[-1] == ' ' || v1[-1] == '\t')) v1--;
+        if ((size_t)(v1 - v0) >= n) { found = 0; continue; }
+        memcpy(out, v0, v1 - v0);
+        out[v1 - v0] = 0;
+        found = 1;
+    }
+    return found;
+}
+
+int crtemu_panel_lang(const char* record, char* out, size_t n)
+{
+    char v[16];
+    int maj = 0, min = 0;
+    /* setups before 2.2 wrote their own language there: that is no choice made in the panel */
+    if (crtemu_get_ini_value(record, "version", v, sizeof(v)) && sscanf(v, "%d.%d", &maj, &min) >= 1 &&
+        (maj < 2 || (maj == 2 && min < 2)))
+        return 0;
+    return crtemu_get_ini_value(record, "lang", out, n);
+}

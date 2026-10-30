@@ -54,7 +54,8 @@ static wchar_t g_msg[4096];
 
 /* ------------------------------------------------------------------ language */
 
-/* the setup's own texts and the F12 panel (lang= in install.ini) follow the choice; English by default */
+/* the setup's own texts: the choice saved in the registry, else the Windows display language. The F12
+   panel has its own language (EN/RU in the panel, lang= in install.ini, else the game's language). */
 enum { LANG_EN, LANG_RU, LANG_N };
 static const wchar_t* const LANG_CODE[LANG_N] = { L"en", L"ru" };
 static const wchar_t* const LANG_NAME[LANG_N] = { L"English", L"Русский" };
@@ -703,6 +704,7 @@ static void save_lang(void) { reg_set(L"Language", LANG_CODE[g_lang]); }
 
 static void load_lang(void)
 {
+    g_lang = PRIMARYLANGID(GetUserDefaultUILanguage()) == LANG_RUSSIAN ? LANG_RU : LANG_EN;
     HKEY k;
     if (RegOpenKeyExW(HKEY_CURRENT_USER, REG_KEY, 0, KEY_READ, &k) != ERROR_SUCCESS) return;
     wchar_t v[16];
@@ -717,8 +719,9 @@ static void load_lang(void)
 
 static void remember_dir(const wchar_t* dir)
 {
+    /* the language is saved only when it is chosen in the window (CBN_SELCHANGE): otherwise the
+       Windows language would hold only until the first install */
     reg_set(L"GamePath", dir);
-    save_lang();
     RegDeleteKeyW(HKEY_CURRENT_USER, OLD_REG_KEY);   /* the path saved under the old name is not needed any more */
 }
 
@@ -879,14 +882,23 @@ static int do_install(const wchar_t* dir, BOOL hd, BOOL keep)
     if (!install_shaders(dir, keep, &kept)) return RES_FAIL;
     int hd_files = hd && gi.hd ? configure_hd(dir) : 0;
 
-    /* marker + record; lang= is read by the F12 panel */
+    /* marker + record. lang= is the F12 panel's language, chosen in the panel: a reinstall keeps it,
+       and without it the panel follows the game's language */
+    path_join(p, dir, SHADER_DIR L"\\install.ini");
+    char lang[16] = "";
+    char* old_rec = read_all(p, NULL);
+    if (old_rec)
+    {
+        if (!crtemu_panel_lang(old_rec, lang, sizeof(lang))) lang[0] = 0;
+        free(old_rec);
+    }
     SYSTEMTIME st;
     GetLocalTime(&st);
     char rec[512];
-    _snprintf(rec, sizeof(rec), "[crt-emu]\r\nversion=%S\r\ninstalled=%04d-%02d-%02d %02d:%02d\r\nforeign_ddraw_backup=%d\r\nlang=%S\r\n",
-              CRTEMU_VERSION, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, gi.dll_foreign, LANG_CODE[g_lang]);
+    _snprintf(rec, sizeof(rec), "[crt-emu]\r\nversion=%S\r\ninstalled=%04d-%02d-%02d %02d:%02d\r\nforeign_ddraw_backup=%d\r\n%s%s%s",
+              CRTEMU_VERSION, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, gi.dll_foreign,
+              lang[0] ? "lang=" : "", lang, lang[0] ? "\r\n" : "");
     rec[sizeof(rec) - 1] = 0;
-    path_join(p, dir, SHADER_DIR L"\\install.ini");
     if (!write_text(p, rec)) return RES_FAIL;
     remember_dir(dir);
 

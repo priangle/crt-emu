@@ -1,7 +1,7 @@
 From 3dd7b6415ace42ae4d98be63b7202945b0f4998b Mon Sep 17 00:00:00 2001
 From: PC-CRT build <noreply@anthropic.com>
 Date: Mon, 26 Oct 2026 10:05:02 +1300
-Subject: [PATCH 1/5] PC-CRT: keep the game window DPI-aware, fix screenshot
+Subject: [PATCH 1/6] PC-CRT: keep the game window DPI-aware, fix screenshot
  file names
 
 - fix_dpi_unaware (default on): block SetThreadDpiAwarenessContext requests

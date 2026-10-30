@@ -1,7 +1,7 @@
 From cdb808fc6bc31fa5b62bed61a515f75a9cbd2a85 Mon Sep 17 00:00:00 2001
 From: priangle <203159732+priangle@users.noreply.github.com>
 Date: Thu, 29 Oct 2026 19:17:46 +1300
-Subject: [PATCH 5/5] crt-emu: panel language from install.ini, //@lang
+Subject: [PATCH 5/6] crt-emu: panel language from install.ini, //@lang
  metadata blocks
 
 The F12 panel reads lang= from install.ini next to the shader (crt-emu-setup
